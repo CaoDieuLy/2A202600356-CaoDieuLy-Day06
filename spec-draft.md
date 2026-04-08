@@ -15,7 +15,7 @@
 |   | Value | Trust | Feasibility |
 |---|-------|-------|-------------|
 | **Câu hỏi** | User nào? Pain gì? AI giải gì? | Khi AI sai thì sao? User sửa bằng cách nào? | Cost/latency bao nhiêu? Risk chính? |
-| **Trả lời** | *User chính là hành khách nội địa/quốc tế, khách sắp bay, khách cần tra cứu gấp ngoài giờ hành chính, và hội viên Lotusmiles. Pain hiện tại là khó tìm đúng thông tin trên website, dễ bị lạc giữa nhiều flow tra cứu, chờ tổng đài lâu, và phải tự diễn giải policy chung cho case riêng của mình. NEO 2.0 giúp user hỏi bằng ngôn ngữ tự nhiên, hiểu rõ hơn ý định truy vấn, giữ ngữ cảnh trong phiên chat và dẫn tới đúng thông tin/đúng bước tiếp theo nhanh hơn.* | *Khi AI sai, user có thể bị trả lời lệch ý, bị kéo về flow cũ, hoặc nhận phản hồi lặp khiến mất thời gian và mất niềm tin. User sửa bằng cách đổi cách diễn đạt, chọn lại quick reply, hoặc bấm gặp nhân viên hỗ trợ. Thiết kế cần làm cho việc “thoát bot” và “thử flow khác” dễ thấy, không để user mắc kẹt trong dead-end.* | *Giả định hackathon: cost thấp vì hệ thống core dùng intent classification + retrieval + API lookup, chỉ dùng LLM nhẹ hoặc không dùng LLM cho mọi request. Latency mục tiêu <2s cho tra cứu cơ bản. Risk chính là trả lời sai policy, trả lời sai context áp dụng, retrieval sai hoặc không đủ thông tin, loop phản hồi, hoặc user over-trust bot trong các case nhạy cảm như đổi vé/hoàn vé/giấy tờ.* |
+| **Trả lời** | ***User chính**: hành khách Vietnam Airlines (nội địa/quốc tế), đặc biệt là người cần tra cứu nhanh trước giờ bay, người không quen website, và hội viên Lotusmiles. <br>**Pain**: phải đi qua nhiều bước (form, filter) để tìm thông tin (giá vé, giờ bay, hành lý), không nhớ chính xác mã chuyến/điều kiện vé, policy khó hiểu và không gắn với hành trình cụ thể, thông tin bị rời rạc. <br>**AI hỗ trợ nâng cao trải nghiệm** bằng 4 core feature: <br>(1) Thông tin chuyến bay: hiểu query → trả giờ + trạng thái;<br>(2) Thông tin vé: xác định user → trả booking cá nhân hóa;<br>(3) Tìm kiếm giá vé: hiểu nhu cầu → đề xuất option phù hợp;<br>(4) Thông tin hành lý: lấy context vé → trả policy chính xác.<br> → **Giá trị cốt lõi**: AI thay thế việc user phải tự hiểu hệ thống bằng cách hiểu ngôn ngữ tự nhiên, kết nối dữ liệu rời rạc và cá nhân hóa câu trả lời → tra cứu 1 bước, nhanh và chính xác hơn.* | *Khi AI sai: <br> (1) Chuyến bay: trả sai chuyến/ngày/trạng thái → user detect ngay vì lệch kế hoạch → sửa bằng nhập lại mã chuyến/ngày hoặc chọn quick reply → system log mismatch để cải thiện mapping intent;<br>(2) Vé: không tìm thấy hoặc trả sai booking → user nhận ra vì không khớp thông tin cá nhân → sửa bằng nhập lại mã booking/email hoặc chọn lại flow “Xem vé của tôi” → system ghi nhận failed retrieval;<br>(3) Giá vé: hiểu sai route/ngày hoặc trả option không phù hợp → user thấy không đúng nhu cầu → sửa bằng chỉnh lại điểm đi/đến/ngày hoặc chọn suggestion → system học từ pattern re-search;<br>(4) Hành lý: trả sai policy (sai hạng vé/route) → user nghi ngờ vì không khớp vé → sửa bằng bổ sung mã vé/hạng vé → system cải thiện mapping policy theo context;<br>→ UI: luôn hiển thị input đã hiểu (route/ngày/booking) để user kiểm tra nhanh + cho sửa trực tiếp (inline edit) + có fallback “gặp nhân viên” khi confidence thấp.* | *Core flow dựa trên database để trả dữ liệu chính xác; AI chỉ dùng để hiểu câu hỏi tự nhiên, parse input và rephrase output cho dễ đọc, không quyết định kết quả mà chỉ đề xuất gợi ý cho người dùng. <br> **Latency** mục tiêu <4–5s, cost thấp vì chỉ gọi LLM cho augmentation, không cho critical path. <br> **Risk chính**: hiểu sai intent, thiếu context, sai policy → xử lý bằng slot filling bắt buộc, inline edit cho user sửa nhanh, và fallback sang human khi confidence thấp.* |
 
 **Automation hay augmentation?** ☐ Automation · ☑ Augmentation
 
@@ -35,19 +35,57 @@ Justify: *Với các truy vấn thông tin cơ bản như giá vé, tình trạn
 
 ---
 
-## 2. User Stories - 4 paths
+## 2. User Stories — 4 paths
 
-### Feature: Trợ lý tra cứu giá vé và thông tin chuyến bay
+### Feature 1: Thông tin chuyến bay
 
-**Trigger:** *User mở khung chat NEO trên web và hỏi: “Giá vé từ Hà Nội đến TP.HCM trong tuần này là bao nhiêu?” hoặc “Cho tôi thông tin chuyến bay Hà Nội - Milan từ 1/8”.*
+**Trigger:** User hỏi giờ cất/hạ cánh hoặc trạng thái chuyến bay, ví dụ: “VN123 bay ngày mai mấy giờ?”  
 
 | Path | Câu hỏi thiết kế | Mô tả |
-|------|-------------------|-------|
-| Happy - AI đúng, tự tin | User thấy gì? Flow kết thúc ra sao? | *Bot hiểu đúng ý định tra cứu, hỏi bổ sung đúng 1-2 biến nếu còn thiếu như ngày đi hoặc chiều bay, rồi trả về khoảng giá/chuyến bay liên quan kèm link tới trang tra cứu chính thức. User tiếp tục tra cứu hoặc chuyển sang đặt vé.* |
-| Low-confidence - AI không chắc | System báo “không chắc” bằng cách nào? User quyết thế nào? | *Bot không đoán bừa mà nói rõ đang thiếu dữ liệu, sau đó hiển thị quick replies như [Chọn ngày đi], [Xem giá rẻ nhất], [Tra cứu theo mã đặt chỗ], [Gặp nhân viên hỗ trợ]. User chọn hướng phù hợp thay vì phải gõ lại từ đầu.* |
-| Failure - AI sai | User biết AI sai bằng cách nào? Recover ra sao? | *Bot trả lời lệch ý, kéo user về flow cũ, hoặc lặp phản hồi “chưa có thông tin” dù user đang hỏi một intent khác. User nhận ra sai khi câu trả lời không khớp với điều mình hỏi hoặc bot không giúp tiến thêm bước nào. Recovery là bấm `Thử cách tra cứu khác` hoặc `Gặp nhân viên hỗ trợ`.* |
-| Correction - user sửa | User sửa bằng cách nào? Data đó đi vào đâu? | *User đổi cách diễn đạt, chọn lại quick reply đúng hơn, hoặc hand-off sang người thật. Những session này được lưu thành correction/failure log để team cập nhật intent map, câu hỏi làm rõ và fallback policy.* |
+|------|-----------------|-------|
+| Happy — AI đúng, tự tin | User thấy gì? Flow kết thúc ra sao? | Bot hiểu đúng ý, hỏi bổ sung nếu thiếu (ngày, chuyến) → trả giờ cất/hạ cánh + trạng thái chuyến bay. User tiếp tục tra cứu hoặc chuyển sang đặt vé. |
+| Low-confidence — AI không chắc | System báo "không chắc" bằng cách nào? User quyết thế nào? | Bot thông báo đang thiếu thông tin, hiển thị quick reply [Nhập ngày], [Chọn chuyến], user chọn → bot tiếp tục flow. |
+| Failure — AI sai | User biết AI sai bằng cách nào? Recover ra sao? | Bot trả nhầm giờ/trạng thái → user nhận ra khi thông tin không khớp kế hoạch → sửa bằng nhập lại ngày/mã chuyến hoặc chọn quick reply khác. |
+| Correction — user sửa | User sửa bằng cách nào? Data đó đi vào đâu? | User chỉnh lại input hoặc chọn quick reply → session lưu correction log → cải thiện mapping intent & retrieval. |
 
+---
+
+### Feature 2: Thông tin vé
+
+**Trigger:** User hỏi về booking cá nhân, ví dụ: “Xem vé của tôi mã ABC123”  
+
+| Path | Câu hỏi thiết kế | Mô tả |
+|------|-----------------|-------|
+| Happy — AI đúng, tự tin | User thấy gì? Flow kết thúc ra sao? | Bot trả booking chính xác, hiển thị đầy đủ chi tiết hành trình. User xem xong, có thể tra cứu tiếp hành lý hoặc giá vé. |
+| Low-confidence — AI không chắc | System báo "không chắc" bằng cách nào? User quyết thế nào? | Bot thông báo không chắc tìm thấy booking, gợi ý chọn lại flow “Xem vé của tôi” hoặc nhập lại mã booking/email. |
+| Failure — AI sai | User biết AI sai bằng cách nào? Recover ra sao? | Bot không tìm thấy hoặc trả sai booking → user nhận ra vì không khớp thông tin cá nhân → nhập lại mã booking/email hoặc chọn flow khác. |
+| Correction — user sửa | User sửa bằng cách nào? Data đó đi vào đâu? | User nhập lại thông tin, session lưu failed retrieval → cải thiện database query & fallback. |
+
+---
+
+### Feature 3: Tìm kiếm giá vé
+
+**Trigger:** User hỏi tìm giá vé, ví dụ: “Giá vé từ Hà Nội đi TP.HCM tuần này rẻ nhất?”  
+
+| Path | Câu hỏi thiết kế | Mô tả |
+|------|-----------------|-------|
+| Happy — AI đúng, tự tin | User thấy gì? Flow kết thúc ra sao? | Bot đề xuất giá và chuyến phù hợp, hiển thị link tra cứu chính thức. User chọn tiếp chuyến hoặc xem chi tiết. |
+| Low-confidence — AI không chắc | System báo "không chắc" bằng cách nào? User quyết thế nào? | Bot thông báo không chắc, hiển thị quick reply [Chọn ngày khác], [Chọn route khác], user chọn → bot tiếp tục tra cứu. |
+| Failure — AI sai | User biết AI sai bằng cách nào? Recover ra sao? | Bot hiểu sai route/ngày, giá đề xuất không phù hợp → user nhận ra → sửa điểm đi/đến/ngày hoặc chọn quick reply đúng. |
+| Correction — user sửa | User sửa bằng cách nào? Data đó đi vào đâu? | User chỉnh input hoặc chọn suggestion → session log pattern re-search → cải thiện retrieval và intent mapping. |
+
+---
+
+### Feature 4: Thông tin hành lý
+
+**Trigger:** User hỏi về hành lý ký gửi/hành lý xách tay, ví dụ: “Hành lý ký gửi chuyến VN123 là bao nhiêu kg?”  
+
+| Path | Câu hỏi thiết kế | Mô tả |
+|------|-----------------|-------|
+| Happy — AI đúng, tự tin | User thấy gì? Flow kết thúc ra sao? | Bot trả policy hành lý chính xác theo hạng vé và hành trình. User tiếp tục tra cứu hoặc kết thúc flow. |
+| Low-confidence — AI không chắc | System báo "không chắc" bằng cách nào? User quyết thế nào? | Bot thông báo cần thêm thông tin (mã vé, hạng vé), hiển thị quick reply [Nhập mã vé], user chọn → bot tiếp tục trả policy chính xác. |
+| Failure — AI sai | User biết AI sai bằng cách nào? Recover ra sao? | Bot trả sai policy (sai hạng vé/route) → user nhận ra khi không khớp vé → sửa bằng nhập mã/hạng vé bổ sung. |
+| Correction — user sửa | User sửa bằng cách nào? Data đó đi vào đâu? | User nhập lại thông tin, session lưu correction → cải thiện mapping policy theo context. |
 ---
 
 ## 3. Eval metrics + threshold
