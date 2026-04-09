@@ -1,0 +1,257 @@
+:root {
+  --vna-teal: #005F6E;
+  --vna-teal-light: #00778B;
+  --vna-gold: #D4A017;
+  --bg-color: #f0f2f5;
+  --text-dark: #333333;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--text-dark);
+  height: 100vh;
+  display: flex;
+  justify-content: center; /* Đưa ra giữa theo chiều ngang */
+  align-items: center; /* Đưa ra giữa theo chiều dọc */
+  padding: 0;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Lớp nền mờ (Blur) full màn hình */
+body::before {
+  content: "";
+  position: absolute;
+  top: -5%; left: -5%;
+  width: 110%; height: 110%;
+  background-image: url('/a-14.jpg');
+  background-size: cover;
+  background-position: center;
+  filter: blur(15px) brightness(0.8);
+  z-index: -2;
+}
+
+/* Lớp ảnh sắc nét được thu nhỏ (Scale) nằm ở giữa */
+body::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-image: url('/a-14.jpg');
+  background-size: contain; /* Tự động thu nhỏ nhét vừa khung hình */
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: -1;
+}
+
+.chat-container {
+  width: 100%;
+  max-width: 380px; /* Thu hẹp lại giống bản gốc */
+  height: 600px; /* Chiều cao cố định */
+  max-height: 85vh;
+  /* Hiệu ứng Kính Mờ (Glassmorphism) */
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.chat-header {
+  padding: 12px 16px;
+  background-color: rgba(0, 95, 110, 0.85); /* Trong suốt một phần */
+  backdrop-filter: blur(5px);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: auto;
+  height: 28px;
+}
+
+.avatar img {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.header-actions span {
+  cursor: pointer;
+  font-size: 1.1rem;
+  opacity: 0.8;
+}
+
+.header-actions span:hover {
+  opacity: 1;
+}
+
+.messages {
+  flex: 1;
+  padding: 15px 15px 5px 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: transparent; /* Hiển thị nền kính của chat-container */
+}
+
+.message {
+  max-width: 85%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  line-height: 1.4;
+  font-size: 0.9rem;
+  word-wrap: break-word;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message.bot {
+  align-self: flex-start;
+  background: #f1f3f5;
+  color: var(--vna-teal);
+  border-bottom-left-radius: 2px;
+}
+
+.message.user {
+  align-self: flex-end;
+  background: var(--vna-teal);
+  color: white;
+  border-bottom-right-radius: 2px;
+}
+
+/* Quick Replies (Gợi ý) */
+.quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 15px 10px 15px;
+  background: white;
+}
+
+.quick-reply-btn {
+  background: #e9ecef;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  color: var(--vna-teal);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.quick-reply-btn:hover {
+  background: var(--vna-teal);
+  color: white;
+}
+
+.message-form-container {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-top: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.message-form {
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.message-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #333;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.message-input::placeholder {
+  color: #999;
+}
+
+.send-button {
+  background: none;
+  border: none;
+  color: var(--vna-teal);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+  padding: 0;
+}
+
+.send-button:hover {
+  transform: scale(1.1);
+  color: var(--vna-teal-light);
+}
+
+.send-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.disclaimer {
+  text-align: center;
+  font-size: 0.65rem;
+  color: #888;
+  padding: 0 15px;
+}
+
+.disclaimer a {
+  color: var(--vna-teal);
+  text-decoration: none;
+}
+
+.typing-indicator span {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background-color: var(--vna-teal);
+  border-radius: 50%;
+  margin: 0 2px;
+  animation: typing 1.4s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+/* Markdown formatting in bot messages */
+.message.bot p { margin-top: 0; margin-bottom: 8px; }
+.message.bot p:last-child { margin-bottom: 0; }
+.message.bot ul { margin-top: 0; padding-left: 20px; }
+.message.bot li { margin-bottom: 4px; }

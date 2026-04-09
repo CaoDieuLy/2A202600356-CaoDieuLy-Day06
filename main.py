@@ -5,7 +5,7 @@ from typing import TypedDict, Annotated, List, Optional
 from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, BaseMessage, AIMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from state import AgentState
 from tools.flight_tools import get_flight_info
 from tools.ticket_tools import get_ticket_details
@@ -15,35 +15,13 @@ from datetime import datetime
 
 load_dotenv()
 
-# Khởi tạo LLM cho việc trích xuất
-llm = ChatOpenAI(
-    model="gpt-4o-mini",
-    temperature=0,
-    api_key=os.environ.get("OPENAI_API_KEY", "not_provided")
-)
+# Khởi tạo LLM với OpenAI
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
-# Pydantic struct cho Extraction Node
-class Entities(BaseModel):
-    flight_code: Optional[str] = Field(default=None, description="Mã chuyến bay, ví dụ VN123")
-    ticket_number: Optional[str] = Field(default=None)
-    passenger_name: Optional[str] = Field(default=None)
-    departure: Optional[str] = Field(default=None)
-    arrival: Optional[str] = Field(default=None)
-    date: Optional[str] = Field(default=None, description="Ngày khởi hành theo định dạng YYYY-MM-DD")
-    cabin_class: Optional[str] = Field(default=None)
-    baggage_type: Optional[str] = Field(default=None)
-
-class ExtractionResult(BaseModel):
-    intent: str = Field(description="general, flight_info, ticket_info, fare_search, hoặc baggage_info")
-    entities: Entities
-
-def read_prompt(file_name):
-    """Đọc nội dung file prompt từ thư mục prompts/."""
-    full_path = os.path.join("prompts", file_name)
-    if os.path.exists(full_path):
-        with open(full_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return ""
+def load_prompt(file_name: str) -> str:
+    prompt_path = os.path.join(os.path.dirname(__file__), "prompts", file_name)
+    with open(prompt_path, "r", encoding="utf-8") as f:
+        return f.read()
 
 def manage_memory_and_cache(state: AgentState):
     """Giữ lượt chat gần nhất và kiểm tra Cache."""
@@ -73,7 +51,7 @@ def intent_classifier(state: AgentState):
         return state
 
     # 1. Đọc prompt và xử lý fallback (từ nhánh cao)
-    sys_prompt = read_prompt("extraction_prompt.txt")
+    sys_prompt = load_prompt("extraction_prompt.txt")
     if not sys_prompt:
         sys_prompt = "Bạn là hệ thống Trích xuất thông tin hàng không."
 
@@ -96,6 +74,7 @@ def intent_classifier(state: AgentState):
     # Option B: Nếu vẫn dùng JSON Mode như code main hiện tại:
     response = llm.invoke(messages, response_format={"type": "json_object"})
     
+    # Parse cấu trúc JSON từ LLM
     try:
         content = response.content.strip()
         # Xử lý xóa markdown nếu có
@@ -118,90 +97,50 @@ def tool_node(state: AgentState):
 
     intent = state.get("current_intent")
     entities = state.get("extracted_data", {})
-    query_results = "Không tìm thấy thông tin phù hợp."
+    
+    query_results = "Không nhận diện được yêu cầu cụ thể."
     
     if intent == "flight_info":
-        f_code = entities.get("flight_code")
-        f_date = entities.get("date")
-        
-        if not f_code:
-            query_results = "SYSTEM_NOTE: Vui lòng yêu cầu khách hàng cung cấp mã chuyến bay."
-        else:
-            # Tra cứu thử xem mã chuyến bay có tồn tại không kể cả khi chưa có ngày
-            all_flights_for_code = get_flight_info(flight_code=f_code, date=None)
-            
-            if not all_flights_for_code:
-                # Nếu không ra data nào, báo ngay lỗi mã sai mà không cần hỏi ngày!
-                query_results = f"SYSTEM_NOTE: Mã chuyến bay {f_code} không có trong hệ thống hiện tại, khuyên khách hàng không cần cung cấp ngày mà hãy kiểm tra lại mã."
-            elif not f_date:
-                # Mã đúng chuẩn, nhưng khách thiếu ngày đi
-                query_results = f"SYSTEM_NOTE: Mã chuyến {f_code} hợp lệ. Vui lòng hỏi khách hàng họ muốn khởi hành vào ngày nào?"
-            else:
-                data = get_flight_info(flight_code=f_code, date=f_date)
-                query_results = str(data) if data else f"SYSTEM_NOTE: Không tìm thấy chuyến bay {f_code} theo ngày cung cấp. Khuyên khách hàng kiểm tra lại."
-            
+        flight_code = entities.get("flight_code")
+        if flight_code:
+            query_results = get_flight_info(flight_code=flight_code)
     elif intent == "ticket_info":
-        query_results = get_ticket_details(
-            ticket_number=entities.get("ticket_number"),
-            passenger_name=entities.get("passenger_name")
-        )
+        passenger_name = entities.get("passenger_name")
+        ticket_number = entities.get("ticket_number")
+        if ticket_number:
+            query_results = get_ticket_details(ticket_number=ticket_number)
+        elif passenger_name:
+            query_results = get_ticket_details(passenger_name=passenger_name)
     elif intent == "fare_search":
-        dep = entities.get("departure")
-        arr = entities.get("arrival")
-        date = entities.get("date")
-        time_of_day = entities.get("time_of_day")
-        
-        # KHÔI PHỤC SLOT FILLING & BẢO VỆ TOOL
-        if not dep or not arr or not date:
-            missing = []
-            if not dep: missing.append("điểm khởi hành")
-            if not arr: missing.append("điểm đến")
-            if not date: missing.append("ngày bay")
-            query_results = f"LỖI HỆ THỐNG: User chưa cung cấp đủ thông tin. KHÔNG ĐƯỢC PHỊA GIÁ VÉ. Hãy lịch sự đề nghị họ bổ sung các thông tin còn thiếu sau: {', '.join(missing)}."
-        else:
-            query_results = search_fares(
-                departure=dep,
-                arrival=arr,
-                date=date,
-                time_of_day=time_of_day,
-                cabin_class=entities.get("cabin_class"),
-                cheapest_only=entities.get("cheapest_only", False)
-            )
+        departure = entities.get("departure")
+        arrival = entities.get("arrival")
+        if departure and arrival:
+            query_results = search_fares(departure=departure, arrival=arrival)
     elif intent == "baggage_info":
-        query_results = get_baggage_policy(
-            cabin_class=entities.get("cabin_class"),
-            baggage_type=entities.get("baggage_type", "checked")
-        )
-        
+        cabin_class = entities.get("cabin_class")
+        baggage_type = entities.get("baggage_type") or "checked"
+        if cabin_class:
+            query_results = get_baggage_policy(cabin_class=cabin_class, baggage_type=baggage_type)
+        else:
+            query_results = {"error": "Thiếu thông tin hạng ghế (Economy hoặc Business)."}
+            
     return {"query_results": query_results}
 
 def responder(state: AgentState):
-    """Node tạo câu trả lời cuối cùng dùng response_prompt.txt."""
+    """Node tạo câu trả lời cuối cùng sử dụng System Prompt."""
     if state.get("is_cached"):
         return {"messages": [AIMessage(content=state["query_results"])]}
 
     results = state.get("query_results")
+    last_message = state["messages"][0].content if state["messages"] else ""
     
-    # Định tuyến System Prompt dựa trên tính năng để tối ưu chất lượng Text
-    if state.get("current_intent") == "flight_info":
-        sys_prompt = read_prompt("feature1_prompt.txt")
-    else:
-        sys_prompt = read_prompt("response_prompt.txt")
-        
-    if not sys_prompt:
-        sys_prompt = "Bạn là trợ lý giải đáp của Vietnam Airlines."
-
-    prompt_content = f"Dựa trên dữ liệu sau (hoặc lưu ý điều hướng từ hệ thống): {results}\nHãy đưa ra câu trả lời trực tiếp cho khách hàng một cách tự nhiên dựa trên câu hỏi sau: {state['messages'][-1].content}."
+    response_prompt = load_prompt("response_prompt.txt")
     
-    chat_llm = ChatOpenAI(
-        model="gpt-4o-mini",
-        temperature=0.3,
-        api_key=os.environ.get("OPENAI_API_KEY", "not_provided")
-    )
+    prompt = f"Dữ liệu tra cứu: {json.dumps(results, ensure_ascii=False)}\nCâu hỏi gốc của người dùng: {last_message}"
     
-    response = chat_llm.invoke([
-        SystemMessage(content=sys_prompt), 
-        HumanMessage(content=prompt_content)
+    response = llm.invoke([
+        SystemMessage(content=response_prompt),
+        HumanMessage(content=prompt)
     ])
     return {"messages": [response]}
 
