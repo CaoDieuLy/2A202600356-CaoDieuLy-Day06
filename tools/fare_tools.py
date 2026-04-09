@@ -1,6 +1,6 @@
 from utils import get_fares, get_flights
 
-def search_fares(departure: str, arrival: str, date: str = None, cabin_class: str = None):
+def search_fares(departure: str, arrival: str, date: str = None, time_of_day: str = None, cabin_class: str = None):
     """
     NHIỆM VỤ CỦA LY (HOÀN THÀNH):
     - Tìm kiếm nhanh giá vé và sắp xếp từ rẻ nhất đến đắt nhất
@@ -65,7 +65,23 @@ def search_fares(departure: str, arrival: str, date: str = None, cabin_class: st
                     continue
             elif cabin_class_lower not in fare_cabin:
                 continue
-            
+
+        # Lọc buổi bay
+        if time_of_day:
+            scheduled_dep = fare.get("scheduled_departure", "")
+            if "T" in scheduled_dep:
+                try:
+                    hour = int(scheduled_dep.split("T")[1].split(":")[0])
+                    time_lower = time_of_day.lower()
+                    if "morning" in time_lower and not (0 <= hour < 12):
+                        continue
+                    elif "afternoon" in time_lower and not (12 <= hour < 18):
+                        continue
+                    elif "evening" in time_lower and not (18 <= hour <= 23):
+                        continue
+                except:
+                    pass
+                    
         results.append(fare)
         
     # Sắp xếp các lựa chọn theo mức giá từ rẻ nhất đến đắt nhất
