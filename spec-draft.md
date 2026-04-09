@@ -135,7 +135,7 @@ Nếu sai ngược lại thì chuyện gì xảy ra?
 ## 6. Mini AI spec (1 trang)
 
 NEO 2.0 là phiên bản cải thiện của chatbot hỗ trợ khách hàng Vietnam Airlines theo hướng “web-first support agent” cho các nhu cầu tra cứu thông tin trước chuyến bay. Bài toán sản phẩm không phải là làm một AI biết mọi thứ, mà là giảm ma sát trong những câu hỏi lặp có volume cao như giá vé, thông tin chuyến bay, tra cứu theo mã đặt chỗ/số vé, đồng thời tránh để user bị kẹt trong các flow sai hoặc phản hồi lặp.
-G
+
 Về bản chất sản phẩm, NEO 2.0 thiên về augmentation hơn là automation. Với các truy vấn tra cứu cơ bản, bot có thể trả lời gần như tự động nếu đã có dữ liệu đúng từ nguồn chính thức. Nhưng với những nghiệp vụ nhạy cảm như thay đổi booking, hoàn vé, hoặc các case có nhiều biến số áp dụng, bot chỉ nên đóng vai trò hướng dẫn: hỏi làm rõ, tóm tắt policy, đưa link chính xác, và chuyển sang nhân viên hỗ trợ khi rủi ro tăng cao.
 
 Về kỹ thuật, phiên bản hackathon không cần xây full agent phức tạp. Core hợp lý nhất là hybrid architecture gồm: intent classifier, session memory ngắn hạn, retrieval từ knowledge base chính thức, API/tool lookup cho các dữ liệu tra cứu được, và một response layer để diễn giải kết quả theo ngôn ngữ tự nhiên. Nếu dùng LLM thì LLM chỉ nên là lớp hiểu câu hỏi và diễn đạt câu trả lời, không phải nguồn chân lý. Source of truth luôn là policy chính thức, dữ liệu tra cứu chuyến bay và booking.

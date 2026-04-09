@@ -56,13 +56,12 @@ def intent_classifier(state: AgentState):
     system_prompt = read_prompt("extraction_prompt.txt")
     user_query = state["messages"][-1].content
     
-    # Gọi LLM để trích xuất JSON theo schema trong prompt
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_query}
-    ]
-    
-    response = llm.invoke(messages)
+    # Khôi phục: Phải đưa Lịch sử hội thoại (Memory) vào để LLM Extraction hiểu ngữ cảnh cũ
+    messages = [{"role": "system", "content": system_prompt}]
+    for m in state["messages"][-6:]:
+        role = "user" if isinstance(m, HumanMessage) else "assistant"
+        messages.append({"role": role, "content": m.content})
+    response = llm.invoke(messages, response_format={"type": "json_object"})
     
     try:
         content = response.content.strip()
@@ -99,11 +98,27 @@ def tool_node(state: AgentState):
             passenger_name=entities.get("passenger_name")
         )
     elif intent == "fare_search":
-        query_results = search_fares(
-            departure=entities.get("departure"),
-            arrival=entities.get("arrival"),
-            cabin_class=entities.get("cabin_class")
-        )
+        dep = entities.get("departure")
+        arr = entities.get("arrival")
+        date = entities.get("date")
+        time_of_day = entities.get("time_of_day")
+        
+        # KHÔI PHỤC SLOT FILLING & BẢO VỆ TOOL
+        if not dep or not arr or not date:
+            missing = []
+            if not dep: missing.append("điểm khởi hành")
+            if not arr: missing.append("điểm đến")
+            if not date: missing.append("ngày bay")
+            query_results = f"LỖI HỆ THỐNG: User chưa cung cấp đủ thông tin. KHÔNG ĐƯỢC PHỊA GIÁ VÉ. Hãy lịch sự đề nghị họ bổ sung các thông tin còn thiếu sau: {', '.join(missing)}."
+        else:
+            query_results = search_fares(
+                departure=dep,
+                arrival=arr,
+                date=date,
+                time_of_day=time_of_day,
+                cabin_class=entities.get("cabin_class"),
+                cheapest_only=entities.get("cheapest_only", False)
+            )
     elif intent == "baggage_info":
         query_results = get_baggage_policy(
             cabin_class=entities.get("cabin_class"),
