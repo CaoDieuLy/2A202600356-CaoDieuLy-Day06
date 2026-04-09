@@ -47,18 +47,32 @@ def intent_classifier(state: AgentState):
     if state.get("is_cached"):
         return state
 
-    last_message = state["messages"][-1].content
-    intent = "general"
-    if "chuyến bay" in last_message.lower() or "vn" in last_message.lower():
-        intent = "flight_info"
-    elif "vé" in last_message.lower() and "giá" not in last_message.lower():
-        intent = "ticket_info"
-    elif "giá vé" in last_message.lower() or "tìm vé" in last_message.lower():
-        intent = "fare_search"
-    elif "hành lý" in last_message.lower():
-        intent = "baggage_info"
+    # Đọc prompt hệ thống từ file
+    try:
+        with open("prompts/extraction_prompt.txt", "r", encoding="utf-8") as f:
+            sys_prompt = f.read()
+    except FileNotFoundError:
+        sys_prompt = "Phân loại intent. Trả về JSON."
+
+    # Tạo luồng hội thoại kết hợp Memory
+    messages = [{"role": "system", "content": sys_prompt}]
+    for m in state["messages"]:
+        role = "user" if isinstance(m, HumanMessage) else "assistant"
+        messages.append({"role": role, "content": m.content})
         
-    return {"current_intent": intent}
+    # Yêu cầu LLM trả về đúng chuẩn JSON
+    response = llm.invoke(messages, response_format={"type": "json_object"})
+    
+    import json
+    try:
+        extracted = json.loads(response.content)
+        intent = extracted.get("intent", "general")
+        entities = extracted.get("entities", {})
+    except Exception as e:
+        intent = "general"
+        entities = {}
+        
+    return {"current_intent": intent, "extracted_data": entities}
 
 def tool_node(state: AgentState):
     """Node gọi các hàm Python để truy vấn dữ liệu."""
@@ -66,31 +80,64 @@ def tool_node(state: AgentState):
         return state
 
     intent = state.get("current_intent")
+    entities = state.get("extracted_data", {})
     query_results = "Không tìm thấy thông tin phù hợp."
     
     if intent == "flight_info":
-        query_results = get_flight_info(flight_code="VN123")
+        query_results = get_flight_info(flight_code=entities.get("flight_code", "VN123"))
     elif intent == "ticket_info":
-        # Sử dụng logic Nam mới viết
-        query_results = get_ticket_details(passenger_name="NGUYEN/DUNG BP")
+        query_results = get_ticket_details(passenger_name=entities.get("passenger_name", "NGUYEN/DUNG BP"))
     elif intent == "fare_search":
-        query_results = search_fares(departure="HAN", arrival="SGN")
+        dep = entities.get("departure")
+        arr = entities.get("arrival")
+        date = entities.get("date")
+        
+        # SLOT FILLING: Chỉ tra vé khi có đủ Điểm đi, Điểm đến, và Ngày bay
+        if not dep or not arr or not date:
+            missing = []
+            if not dep: missing.append("điểm khởi hành")
+            if not arr: missing.append("điểm đến")
+            if not date: missing.append("ngày bay")
+            query_results = f"LỖI HỆ THỐNG: User chưa cung cấp đủ thông tin. Hãy lịch sự đề nghị họ bổ sung các thông tin còn thiếu sau: {', '.join(missing)}."
+        else:
+            query_results = search_fares(
+                departure=dep, 
+                arrival=arr, 
+                date=date, 
+                cabin_class=entities.get("cabin_class")
+            )
+            if not query_results:
+                query_results = "LỖI HỆ THỐNG: Hiện tại hệ thống không thể tìm được chuyến bay nào từ báo cáo dữ liệu tương ứng."
     elif intent == "baggage_info":
-        query_results = get_baggage_policy(cabin_class="Economy")
+        query_results = get_baggage_policy(cabin_class=entities.get("cabin_class", "Economy"))
         
     return {"query_results": query_results}
 
 def responder(state: AgentState):
     """Node tạo câu trả lời cuối cùng."""
+    from langchain_core.messages import AIMessage
+    
     if state.get("is_cached"):
-        # Trả về kết quả từ cache dưới dạng AIMessage
-        from langchain_core.messages import AIMessage
         return {"messages": [AIMessage(content=state["query_results"])]}
 
     results = state.get("query_results")
-    prompt = f"Dựa trên dữ liệu sau: {results}, hãy trả lời câu hỏi của người dùng một cách chuyên nghiệp."
-    response = llm.invoke([HumanMessage(content=prompt)])
-    return {"messages": [response]}
+    
+    try:
+        with open("prompts/response_prompt.txt", "r", encoding="utf-8") as f:
+            sys_prompt = f.read()
+    except FileNotFoundError:
+        sys_prompt = "Bạn là trợ lý AI NEO của Vietnam Airlines."
+
+    messages = [
+        {"role": "system", "content": f"{sys_prompt}\n\nDữ liệu/Phản hồi từ Hệ thống: {results}"}
+    ]
+    
+    for m in state["messages"][-6:]:
+        role = "user" if isinstance(m, HumanMessage) else "assistant"
+        messages.append({"role": role, "content": m.content})
+        
+    response = llm.invoke(messages)
+    return {"messages": [AIMessage(content=response.content)]}
 
 # Xây dựng Graph
 workflow = StateGraph(AgentState)
