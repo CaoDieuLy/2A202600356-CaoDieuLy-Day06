@@ -11,6 +11,7 @@ from tools.flight_tools import get_flight_info
 from tools.ticket_tools import get_ticket_details
 from tools.fare_tools import search_fares
 from tools.baggage_tools import get_baggage_policy
+from datetime import datetime
 
 load_dotenv()
 
@@ -45,30 +46,49 @@ def manage_memory_and_cache(state: AgentState):
     return {"messages": messages, "is_cached": False}
 
 def intent_classifier(state: AgentState):
-    """Node phân loại ý định người dùng và trích xuất thực thể."""
+    """Node phân loại ý định và trích xuất thực thể bằng LLM."""
     if state.get("is_cached"):
         return state
 
-    last_message = state["messages"][-1].content
-    extraction_prompt = load_prompt("extraction_prompt.txt")
-    
-    # Yêu cầu LLM trích xuất JSON
-    response = llm.invoke([
-        SystemMessage(content=extraction_prompt),
-        HumanMessage(content=f"User query: {last_message}")
-    ])
+    # 1. Đọc prompt và xử lý fallback (từ nhánh cao)
+    sys_prompt = load_prompt("extraction_prompt.txt")
+    if not sys_prompt:
+        sys_prompt = "Bạn là hệ thống Trích xuất thông tin hàng không."
+
+    # 2. Thêm ngữ cảnh thời gian thực (từ nhánh cao)
+    today = datetime.now().strftime('%Y-%m-%d')
+    sys_prompt += f"\nLưu ý Context: Hôm nay là ngày {today}."
+
+    # 3. Khôi phục Lịch sử hội thoại - Memory (từ nhánh main)
+    messages = [{"role": "system", "content": sys_prompt}]
+    for m in state["messages"][-6:]:
+        role = "user" if isinstance(m, HumanMessage) else "assistant"
+        messages.append({"role": role, "content": m.content})
+
+    # 4. Gọi LLM 
+    # Option A: Nếu bạn dùng Pydantic (ExtractionResult) như trong nhánh cao:
+    # structured_llm = llm.with_structured_output(ExtractionResult)
+    # response = structured_llm.invoke(messages)
+    # return {"current_intent": response.intent, "extracted_data": response.dict()}
+
+    # Option B: Nếu vẫn dùng JSON Mode như code main hiện tại:
+    response = llm.invoke(messages, response_format={"type": "json_object"})
     
     # Parse cấu trúc JSON từ LLM
     try:
-        content = response.content.replace("```json", "").replace("```", "").strip()
-        data = json.loads(content)
-        intent = data.get("intent", "general")
-        entities = data.get("entities", {})
-    except Exception as e:
-        intent = "general"
-        entities = {}
+        content = response.content.strip()
+        # Xử lý xóa markdown nếu có
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0].strip()
         
-    return {"current_intent": intent, "extracted_data": entities}
+        extracted_data = json.loads(content)
+        return {
+            "current_intent": extracted_data.get("intent", "general"),
+            "extracted_data": extracted_data
+        }
+    except Exception as e:
+        print(f"Lỗi trích xuất thông tin: {e}")
+        return {"current_intent": "general", "extracted_data": {"intent": "general", "entities": {}}}
 
 def tool_node(state: AgentState):
     """Node gọi các hàm Python để truy vấn dữ liệu thực tế từ Entities trích xuất được."""
