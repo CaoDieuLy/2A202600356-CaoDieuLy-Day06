@@ -1,0 +1,343 @@
+{
+  "flights": [
+    {
+      "flight_code": "VN123",
+      "departure": "HAN (Hà Nội)",
+      "arrival": "SGN (TP.HCM)",
+      "scheduled_departure": "2026-04-10T08:00:00",
+      "scheduled_arrival": "2026-04-10T10:15:00",
+      "status": "On Time"
+    },
+    {
+      "flight_code": "VN124",
+      "departure": "HAN (Hà Nội)",
+      "arrival": "SGN (TP.HCM)",
+      "scheduled_departure": "2026-04-10T10:00:00",
+      "scheduled_arrival": "2026-04-10T12:15:00",
+      "status": "On Time"
+    },
+    {
+      "flight_code": "VN125",
+      "departure": "HAN (Hà Nội)",
+      "arrival": "SGN (TP.HCM)",
+      "scheduled_departure": "2026-04-10T12:00:00",
+      "scheduled_arrival": "2026-04-10T14:15:00",
+      "status": "Delayed"
+    },
+    {
+      "flight_code": "VN214",
+      "departure": "SGN (TP.HCM)",
+      "arrival": "HAN (Hà Nội)",
+      "scheduled_departure": "2026-04-10T13:20:00",
+      "scheduled_arrival": "2026-04-10T15:35:00",
+      "status": "On Time"
+    },
+    {
+      "flight_code": "VN215",
+      "departure": "SGN (TP.HCM)",
+      "arrival": "HAN (Hà Nội)",
+      "scheduled_departure": "2026-04-10T15:20:00",
+      "scheduled_arrival": "2026-04-10T17:35:00",
+      "status": "On Time"
+    },
+    {
+      "flight_code": "VN216",
+      "departure": "SGN (TP.HCM)",
+      "arrival": "DAD (Đà Nẵng)",
+      "scheduled_departure": "2026-04-10T09:30:00",
+      "scheduled_arrival": "2026-04-10T11:00:00",
+      "status": "On Time"
+    },
+    {
+      "flight_code": "VN217",
+      "departure": "SGN (TP.HCM)",
+      "arrival": "DAD (Đà Nẵng)",
+      "scheduled_departure": "2026-04-10T11:30:00",
+      "scheduled_arrival": "2026-04-10T13:00:00",
+      "status": "Delayed"
+    },
+    {
+      "flight_code": "VN318",
+      "departure": "DAD (Đà Nẵng)",
+      "arrival": "HAN (Hà Nội)",
+      "scheduled_departure": "2026-04-10T14:00:00",
+      "scheduled_arrival": "2026-04-10T16:15:00",
+      "status": "On Time"
+    },
+    {
+      "flight_code": "VN319",
+      "departure": "DAD (Đà Nẵng)",
+      "arrival": "HAN (Hà Nội)",
+      "scheduled_departure": "2026-04-10T16:00:00",
+      "scheduled_arrival": "2026-04-10T18:15:00",
+      "status": "On Time"
+    },
+    {
+      "flight_code": "VN320",
+      "departure": "DAD (Đà Nẵng)",
+      "arrival": "HAN (Hà Nội)",
+      "scheduled_departure": "2026-04-10T18:00:00",
+      "scheduled_arrival": "2026-04-10T20:15:00",
+      "status": "Delayed"
+    }
+  ],
+  "tickets": [
+    {
+      "passenger_name": "NGUYEN/DUNG BP",
+      "ticket_number": [
+        "0905262286",
+        "0961901286"
+      ],
+      "flight_code": "VN123",
+      "booking_class": "M",
+      "travel_date": "2026-04-10",
+      "route_from": "HANOI",
+      "route_to": "HO CHI MINH CITY",
+      "seat": "99A",
+      "cabin_class": "Economy"
+    },
+    {
+      "passenger_name": "BUI/THANH TU MR",
+      "ticket_number": [
+        "7382438631303"
+      ],
+      "flight_code": "VN214",
+      "booking_class": "O",
+      "travel_date": "2026-04-10",
+      "route_from": "HO CHI MINH CITY",
+      "route_to": "HANOI",
+      "seat": "7A",
+      "cabin_class": "Business"
+    },
+    {
+      "passenger_name": "LE/THI ANH F",
+      "ticket_number": [
+        "1234567890"
+      ],
+      "flight_code": "VN215",
+      "booking_class": "M",
+      "travel_date": "2026-04-10",
+      "route_from": "HO CHI MINH CITY",
+      "route_to": "HAN",
+      "seat": "12C",
+      "cabin_class": "Economy"
+    },
+    {
+      "passenger_name": "TRAN/QUOC H",
+      "ticket_number": [
+        "2345678901"
+      ],
+      "flight_code": "VN216",
+      "booking_class": "Y",
+      "travel_date": "2026-04-10",
+      "route_from": "HO CHI MINH CITY",
+      "route_to": "DA NANG",
+      "seat": "1A",
+      "cabin_class": "Business"
+    },
+    {
+      "passenger_name": "PHAM/THU K",
+      "ticket_number": [
+        "3456789012"
+      ],
+      "flight_code": "VN217",
+      "booking_class": "M",
+      "travel_date": "2026-04-10",
+      "route_from": "HO CHI MINH CITY",
+      "route_to": "DA NANG",
+      "seat": "2B",
+      "cabin_class": "Economy"
+    },
+    {
+      "passenger_name": "HOANG/TUAN L",
+      "ticket_number": [
+        "4567890123"
+      ],
+      "flight_code": "VN318",
+      "booking_class": "O",
+      "travel_date": "2026-04-10",
+      "route_from": "DA NANG",
+      "route_to": "HAN",
+      "seat": "15F",
+      "cabin_class": "Economy"
+    },
+    {
+      "passenger_name": "NGUYEN/THANH N",
+      "ticket_number": [
+        "5678901234"
+      ],
+      "flight_code": "VN319",
+      "booking_class": "M",
+      "travel_date": "2026-04-10",
+      "route_from": "DA NANG",
+      "route_to": "HAN",
+      "seat": "10D",
+      "cabin_class": "Business"
+    },
+    {
+      "passenger_name": "LE/QUOC P",
+      "ticket_number": [
+        "6789012345"
+      ],
+      "flight_code": "VN320",
+      "booking_class": "Y",
+      "travel_date": "2026-04-10",
+      "route_from": "DA NANG",
+      "route_to": "HAN",
+      "seat": "20C",
+      "cabin_class": "Economy"
+    },
+    {
+      "passenger_name": "VU/HOANG Q",
+      "ticket_number": [
+        "7890123456"
+      ],
+      "flight_code": "VN124",
+      "booking_class": "M",
+      "travel_date": "2026-04-10",
+      "route_from": "HAN",
+      "route_to": "HO CHI MINH CITY",
+      "seat": "3A",
+      "cabin_class": "Business"
+    },
+    {
+      "passenger_name": "DO/THI R",
+      "ticket_number": [
+        "8901234567"
+      ],
+      "flight_code": "VN125",
+      "booking_class": "O",
+      "travel_date": "2026-04-10",
+      "route_from": "HAN",
+      "route_to": "HO CHI MINH CITY",
+      "seat": "5B",
+      "cabin_class": "Economy"
+    }
+  ],
+  "fares": [
+    {
+      "flight_code": "VN123",
+      "scheduled_departure": "2026-04-10T08:00:00",
+      "scheduled_arrival": "2026-04-10T10:15:00",
+      "cabin_class": "Economy",
+      "price": 1250000,
+      "currency": "VND",
+      "is_available": true
+    },
+    {
+      "flight_code": "VN123",
+      "scheduled_departure": "2026-04-10T08:00:00",
+      "scheduled_arrival": "2026-04-10T10:15:00",
+      "cabin_class": "Business",
+      "price": 4500000,
+      "currency": "VND",
+      "is_available": true
+    },
+    {
+      "flight_code": "VN124",
+      "scheduled_departure": "2026-04-10T10:00:00",
+      "scheduled_arrival": "2026-04-10T12:15:00",
+      "cabin_class": "Economy",
+      "price": 1300000,
+      "currency": "VND",
+      "is_available": true
+    },
+    {
+      "flight_code": "VN125",
+      "scheduled_departure": "2026-04-10T12:00:00",
+      "scheduled_arrival": "2026-04-10T14:15:00",
+      "cabin_class": "Business",
+      "price": 4600000,
+      "currency": "VND",
+      "is_available": true
+    },
+    {
+      "flight_code": "VN214",
+      "scheduled_departure": "2026-04-10T13:20:00",
+      "scheduled_arrival": "2026-04-10T15:35:00",
+      "cabin_class": "Business",
+      "price": 4500000,
+      "currency": "VND",
+      "is_available": true
+    },
+    {
+      "flight_code": "VN216",
+      "scheduled_departure": "2026-04-10T09:30:00",
+      "scheduled_arrival": "2026-04-10T11:00:00",
+      "cabin_class": "Economy",
+      "price": 1100000,
+      "currency": "VND",
+      "is_available": true
+    },
+    {
+      "flight_code": "VN217",
+      "scheduled_departure": "2026-04-10T11:30:00",
+      "scheduled_arrival": "2026-04-10T13:00:00",
+      "cabin_class": "Business",
+      "price": 4600000,
+      "currency": "VND",
+      "is_available": true
+    },
+    {
+      "flight_code": "VN318",
+      "scheduled_departure": "2026-04-10T14:00:00",
+      "scheduled_arrival": "2026-04-10T16:15:00",
+      "cabin_class": "Economy",
+      "price": 1250000,
+      "currency": "VND",
+      "is_available": true
+    },
+    {
+      "flight_code": "VN319",
+      "scheduled_departure": "2026-04-10T16:00:00",
+      "scheduled_arrival": "2026-04-10T18:15:00",
+      "cabin_class": "Business",
+      "price": 4550000,
+      "currency": "VND",
+      "is_available": true
+    },
+    {
+      "flight_code": "VN320",
+      "scheduled_departure": "2026-04-10T18:00:00",
+      "scheduled_arrival": "2026-04-10T20:15:00",
+      "cabin_class": "Economy",
+      "price": 1200000,
+      "currency": "VND",
+      "is_available": true
+    }
+  ],
+  "baggage_rules": [
+    {
+      "type": "checked",
+      "cabin_class": "Economy",
+      "pieces": 1,
+      "weight_kg": 23,
+      "max_weight_per_piece_kg": 32,
+      "max_dimensions_cm": 203
+    },
+    {
+      "type": "carry_on",
+      "cabin_class": "Economy",
+      "pieces": 1,
+      "weight_kg": 12,
+      "max_weight_per_piece_kg": 12,
+      "max_dimensions_cm": 115
+    },
+    {
+      "type": "checked",
+      "cabin_class": "Business",
+      "pieces": 1,
+      "weight_kg": 32,
+      "max_weight_per_piece_kg": 32,
+      "max_dimensions_cm": 203
+    },
+    {
+      "type": "carry_on",
+      "cabin_class": "Business",
+      "pieces": 2,
+      "weight_kg": 18,
+      "max_weight_per_piece_kg": 10,
+      "max_dimensions_cm": 115
+    }
+  ]
+}
