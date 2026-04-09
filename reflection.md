@@ -1,99 +1,102 @@
-# 🪞 Reflection — Thành viên: Ly
+# 🪞 Reflection — Cao Diệu Ly
 
 **Dự án:** NEO 2.0 — Vietnam Airlines AI Assistant  
 **Nhóm:** Nhóm 21-403  
-**Vai trò:** Feature 3 Developer · Prompt Engineer · QA  
 **Ngày:** 09/04/2026
 
 ---
 
-## 1. Phần việc đã thực hiện
+## 1. Role cụ thể trong nhóm
 
-### 1.1. Feature 3 — Tra cứu giá vé (`search_fares`)
+Trong nhóm 4 người (Cao, Nam, Ly, Tuấn), tôi đảm nhiệm **3 vai trò song song**:
 
-Tôi chịu trách nhiệm xây dựng tính năng **Tìm kiếm giá vé** (`fare_search`) — một trong 4 core features của chatbot NEO 2.0. Cụ thể, tôi đã phát triển hàm `search_fares()` trong file `tools/fare_tools.py` với các khả năng:
-
-- **Cross-reference 2 bảng dữ liệu:** Đây là thách thức lớn nhất của Feature 3. Bảng `fares` trong JSON không hề chứa thông tin điểm đi/điểm đến — chỉ có `flight_code`. Vì vậy, tôi phải thiết kế logic lọc theo 2 bước: **(1)** Duyệt bảng `flights` để tìm tập hợp `flight_code` khớp với cặp sân bay đi/đến, **(2)** Dùng tập hợp đó để lọc tiếp bảng `fares` và trả kết quả giá vé.
-- **Lọc đa điều kiện:** Hỗ trợ lọc theo ngày bay (`date`), hạng ghế (`cabin_class`), buổi bay (`time_of_day`: sáng/chiều/tối), và chế độ "rẻ nhất" (`cheapest_only`).
-- **Normalize dữ liệu đầu vào:** Xử lý format ngày kiểu Việt Nam (`10/4` → `04-10`), so khớp case-insensitive cho tên sân bay, và map tiếng Việt sang tiếng Anh cho hạng vé (`Thương gia` → `Business`).
-- **Cơ chế bảo vệ (Guard Clause):** Thêm lớp bảo vệ ngay đầu hàm — nếu thiếu `departure` hoặc `arrival` thì trả `[]` ngay lập tức, ngăn AI lấy rác từ toàn bộ cơ sở dữ liệu khi bị thiếu thông tin cốt lõi.
-- **Sắp xếp kết quả:** Tự động sắp xếp danh sách vé theo giá từ rẻ → đắt, giới hạn trả về tối đa 5 kết quả để tránh quá tải thông tin cho khách hàng.
-
-### 1.2. Cập nhật Prompts (Prompt Engineering)
-
-Ngoài Feature 3, tôi còn phụ trách **cập nhật và tinh chỉnh toàn bộ hệ thống Prompt** trong thư mục `prompts/`, bao gồm:
-
-- **`extraction_prompt.txt`** — Prompt trích xuất ý định (Intent Classification & Entity Extraction):
-  - Thiết kế cấu trúc ROLE → TASK → CONTEXT → EXTRACTION RULES → FEW-SHOT EXAMPLES → OUTPUT FORMAT.
-  - Bổ sung quy tắc xử lý input ngắn (chuỗi số → `ticket_info`, chuỗi "VNxxx" → `flight_info`).
-  - Thêm quy tắc Date Resolution để AI hiểu "hôm nay", "ngày mai", "hôm đó" dựa theo context.
-  - Định nghĩa rõ output JSON schema với tất cả entity fields (`flight_code`, `ticket_number`, `departure`, `arrival`, `date`, `time_of_day`, `cheapest_only`, `cabin_class`, `baggage_type`).
-
-- **`response_prompt.txt`** — Prompt phản hồi tổng quát (Response Generation):
-  - Thiết lập quy tắc chuyển đổi dữ liệu thô JSON → văn xuôi tiếng Việt tự nhiên.
-  - Thêm quy tắc quan trọng: khi khách hỏi "rẻ nhất" → BẮT BUỘC chỉ trả 1 kết quả, CẤM liệt kê các chuyến khác.
-  - Bổ sung hướng dẫn xử lý khi thiếu thông tin hoặc không tìm thấy dữ liệu cho từng intent cụ thể.
-
-
-### 1.3. Thiết kế Test Cases & Kiểm thử
-
-Tôi đảm nhiệm vai trò **QA** — thiết kế kịch bản kiểm thử cho toàn bộ team:
-
-- **`test_case.md`** — Bộ test cases tổng hợp cho cả 4 features:
-  - Feature 1: Happy path, xử lý ngữ cảnh "hôm đó" (relative date/memory), sai mã chuyến bay (pre-check lỗi).
-  - Feature 2: Slot-filling (thiếu ngày bay → hỏi lại), bổ sung thông tin, bộ lọc đa điều kiện phức tạp.
-  - Feature 3: Từ chối tra vé theo tên (bảo mật), luồng chuẩn bằng mã vé.
-  - Feature 4: Hỏi chung chung (Economy), hỏi cụ thể (Business carry-on).
-
-- **`test_ly.py`** — Script kiểm thử tự động multi-turn conversation cho feature 3 (5 lượt):
-  - Lượt 1: Tìm giá vé thiếu ngày → kiểm tra Slot-Filling có hoạt động không.
-  - Lượt 2: Bổ sung ngày + hạng Economy → kiểm tra kết hợp context.
-  - Lượt 3: Follow-up hỏi hạng Thương gia "hôm đó" → kiểm tra Memory (persistent slots).
-  - Lượt 4: Hỏi chuyến rẻ nhất → kiểm tra `cheapest_only`.
-  - Lượt 5: Lọc buổi chiều → kiểm tra `time_of_day` filter.
+- **Feature 3 Developer:** Chịu trách nhiệm toàn bộ tính năng **Tra cứu giá vé** (`fare_search`) — từ thiết kế logic cross-reference 2 bảng dữ liệu, viết hàm `search_fares()` trong `tools/fare_tools.py`, đến tích hợp vào pipeline LangGraph trong `main.py`.
+- **Prompt Engineer:** Phụ trách viết và tinh chỉnh **toàn bộ hệ thống prompt** trong thư mục `prompts/` cho cả 4 features — không chỉ riêng Feature 3 của mình. Đây là phần ảnh hưởng trực tiếp đến chất lượng AI của toàn bộ sản phẩm.
+- **QA (Kiểm thử):** Thiết kế bộ test cases (`test_case.md`) cho cả nhóm và viết script test tự động (`test_ly.py`) để kiểm thử luồng multi-turn conversation.
 
 ---
 
-## 2. Bài học rút ra
+## 2. Phần phụ trách cụ thể (đóng góp có output rõ)
 
-### 2.1. Kỹ thuật
-- **Cross-reference dữ liệu là kỹ năng quan trọng:** Khi database không được thiết kế tối ưu (bảng `fares` thiếu trường đi/đến), developer phải tự thiết kế logic nối bảng. Đây là bài học thực tế về Data Engineering mà tôi không lường trước.
-- **Prompt Engineering là "nghệ thuật":** Một prompt tốt phải cân bằng giữa việc cho AI đủ context (không thiếu) nhưng cũng không quá dài (gây hallucination). Việc thêm Few-Shot Examples và rõ ràng Output Format đã cải thiện đáng kể độ chính xác của extraction.
-- **Guard Clause cứu mạng:** Ban đầu tôi không có dòng kiểm tra `if not departure or not arrival: return []`, khiến AI có lúc gọi `search_fares()` với tham số rỗng và trả về toàn bộ database — gây trải nghiệm rất tệ. Bài học: luôn validate input trước khi xử lý.
+### Đóng góp 1: Hàm `search_fares()` — file `tools/fare_tools.py`
 
-### 2.2. Làm việc nhóm
-- **Phân chia feature độc lập rất hiệu quả:** Mỗi người viết 1 file tool riêng (`fare_tools.py`, `flight_tools.py`,...), sau đó tích hợp vào `main.py` một cách gọn gàng. Kiến trúc module hóa giúp giảm xung đột code.
-- **Test cases phải viết từ sớm:** Khi tôi viết `test_case.md` trước, cả nhóm có chung "tiêu chuẩn đầu ra" để hướng tới. Điều này giúp tiết kiệm thời gian debug rất nhiều so với việc test thủ công không có kịch bản.
+Viết hàm tra cứu giá vé **97 dòng** với các khả năng:
+- **Cross-reference 2 bảng:** Bảng `fares` không chứa điểm đi/đến — chỉ có `flight_code`. Tôi phải lọc bảng `flights` trước để tìm tập `flight_code` hợp lệ, rồi dùng tập đó match sang bảng `fares`.
+- **Lọc đa điều kiện:** Hỗ trợ lọc theo ngày bay, hạng ghế (`Economy`/`Business`), buổi bay (`morning`/`afternoon`/`evening`), và chế độ `cheapest_only`.
+- **Normalize dữ liệu:** Xử lý format ngày Việt Nam (`10/4` → `04-10`), case-insensitive matching, mapping tiếng Việt (`Thương gia` → `Business`).
+- **Guard Clause:** Nếu thiếu `departure` hoặc `arrival` → trả `[]` ngay, ngăn AI lấy rác toàn bộ database.
+- **Sắp xếp:** Tự động sort giá rẻ → đắt, giới hạn tối đa 5 kết quả.
 
-### 2.3. Sản phẩm AI
-- **Slot-Filling là linh hồn của chatbot:** Nếu AI cứ cố trả lời khi chưa đủ thông tin, kết quả sẽ sai. Cách tiếp cận đúng là: thiếu slot → hỏi lại khách hàng → nhận đủ → mới truy vấn. Điều này thể hiện triết lý **Precision > Recall** của dự án.
-- **Context Memory phức tạp hơn tưởng tượng:** Xử lý "hôm đó", "ngày mai" đòi hỏi bơm timestamp thực vào system prompt và để AI tự tham chiếu lịch sử hội thoại. Đây là phần tốn nhiều thời gian tinh chỉnh nhất.
+### Đóng góp 2: Hệ thống Prompt — thư mục `prompts/`
 
----
+Viết và cập nhật **3 file prompt** điều khiển hành vi AI cho toàn bộ chatbot:
+- **`extraction_prompt.txt`:** Prompt trích xuất intent + entities theo cấu trúc ROLE → TASK → CONTEXT → RULES → FEW-SHOT → OUTPUT FORMAT. Thêm quy tắc xử lý input ngắn (chuỗi số → `ticket_info`, "VNxxx" → `flight_info`) và Date Resolution ("hôm nay", "ngày mai", "hôm đó").
+- **`response_prompt.txt`:** Prompt phản hồi tổng quát — quy tắc chuyển JSON thô → văn xuôi tiếng Việt. Thêm rule: hỏi "rẻ nhất" → BẮT BUỘC chỉ trả 1 kết quả.
+- **`feature1_prompt.txt`:** Prompt chuyên biệt cho Feature 1 (chuyến bay) — format bullet points chuẩn, kịch bản xử lý lỗi.
 
-## 3. Khó khăn gặp phải & Cách giải quyết
+### Đóng góp 3: Bộ Test Cases — `test_case.md` + `test_ly.py`
 
-| Khó khăn | Cách giải quyết |
-|-----------|----------------|
-| Bảng `fares` không chứa điểm đi/đến, chỉ có `flight_code` | Thiết kế logic 2 bước: lọc `flights` → lấy tập `flight_code` → match sang `fares` |
-| Ngày tháng format không thống nhất (10/4 vs 2026-04-10) | Viết hàm normalize: tách chuỗi "10/4" → "04-10" rồi so khớp substring |
-| AI trả toàn bộ DB khi thiếu tham số | Thêm Guard Clause đầu hàm + SYSTEM_NOTE trong `main.py` buộc hỏi lại |
-| Prompt ban đầu quá chung chung, AI bóc sai intent | Tái cấu trúc prompt theo ROLE-TASK-CONTEXT-RULES, bổ sung Few-Shot Examples |
-| Khách nói "Thương gia" nhưng DB lưu "Business" | Thêm mapping Việt-Anh trong logic lọc `cabin_class` |
+- **`test_case.md`:** Thiết kế kịch bản kiểm thử cho cả 4 features (7 test cases), bao gồm Happy Path, Slot-Filling, Edge Cases, và Security (từ chối tra vé theo tên).
+- **`test_ly.py`:** Script tự động chạy 5 lượt hội thoại liên tiếp cho Feature 3, kiểm tra Slot-Filling → Context Memory → Follow-up → Cheapest Only → Time-of-day Filter.
 
 ---
 
-## 4. Nếu được làm lại, tôi sẽ thay đổi gì?
+## 3. SPEC — Phần mạnh nhất và yếu nhất
 
-1. **Viết Unit Test trước khi code (TDD):** Thay vì code xong mới viết test, tôi sẽ định nghĩa test cases trước để có hướng phát triển rõ ràng hơn.
-2. **Tách Prompt thành nhiều file hơn:** Mỗi feature nên có prompt riêng (giống `feature1_prompt.txt` cho Feature 1), thay vì dùng chung `response_prompt.txt` cho Feature 2, 3, 4.
-3. **Thêm Error Logging chi tiết:** Hiện tại khi hàm lỗi chỉ return `[]` hoặc chuỗi rỗng — rất khó debug. Nên thêm logging với severity level.
-4. **Tối ưu hiệu suất truy vấn:** Hiện tại duyệt toàn bộ mảng `flights` mỗi lần gọi. Nếu dữ liệu lớn, nên build index hoặc dùng dictionary lookup.
+### Phần mạnh nhất: **User Stories — 4 Paths** (Section 2)
+
+Đây là phần SPEC tôi đánh giá cao nhất vì nó **bắt buộc nhóm phải nghĩ trước** 4 kịch bản cho mỗi feature: Happy Path, Low-confidence, Failure, và Correction. Nhờ vậy, khi code Feature 3, tôi đã biết trước:
+- Khi AI **đúng**: trả giá + link tra cứu.
+- Khi AI **không chắc**: hỏi lại route/ngày bằng quick reply.
+- Khi AI **sai**: user sửa điểm đi/đến/ngày.
+- Khi user **sửa**: log pattern re-search để cải thiện.
+
+Điều này giúp tôi thiết kế logic Slot-Filling và Guard Clause **có chủ đích** thay vì code xong mới nghĩ edge case.
+
+### Phần yếu nhất: **ROI 3 kịch bản** (Section 5)
+
+Phần ROI có các con số (`3,000 session/ngày`, `$300/tháng`) nhưng hoàn toàn là **giả định order-of-magnitude** — không có cơ sở dữ liệu thực để kiểm chứng. Trong hackathon, chúng tôi không có access vào traffic thật của Vietnam Airlines, nên phần này mang tính "điền cho đủ template" hơn là phân tích có giá trị. Nếu có thời gian, tôi sẽ benchmark bằng cách đo latency thực tế và tính cost API call từ GPT-4o-mini để có con số chính xác hơn.
 
 ---
 
-## 5. Đánh giá tổng thể
+## 4. Đóng góp khác ngoài phần phụ trách chính
 
-Dự án NEO 2.0 đã đạt được mục tiêu ban đầu: xây dựng một chatbot hàng không **end-to-end** (Option C) với kiến trúc LangGraph, hỗ trợ 4 tính năng chính, có giao diện Next.js hiện đại, và khả năng Slot-Filling thông minh. Phần việc của tôi (Feature 3 + Prompts + Test Cases) đã đóng góp vào cả 3 trụ cột của sản phẩm: **tính năng nghiệp vụ**, **chất lượng AI**, và **đảm bảo chất lượng**.
+Ngoài 3 đóng góp output ở mục 2, tôi còn thực hiện:
 
-Trải nghiệm hackathon này giúp tôi hiểu sâu hơn về cách xây dựng một sản phẩm AI thực chiến — không chỉ là viết code, mà còn là thiết kế prompt, quản lý context, xử lý edge cases, và làm việc nhóm hiệu quả dưới áp lực thời gian.
+- **Debug Slot-Filling cho cả nhóm:** Khi Feature 1 (Cao) bị lỗi AI hỏi ngày cả khi mã chuyến bay sai, tôi phát hiện nguyên nhân (thiếu pre-check) và gợi ý thêm logic kiểm tra mã chuyến bay tồn tại trước khi hỏi ngày trong `main.py` (dòng 109-113).
+- **Test prompt cross-feature:** Sau khi viết `extraction_prompt.txt`, tôi test thủ công với các câu hỏi lắt léo cho cả 4 features (ví dụ: "Thế vé chuyến bay hạng thương gia hôm đó giá bao nhiêu?" — câu này chuyển từ Feature 1 sang Feature 3 giữa chừng) để đảm bảo prompt không bóc sai intent.
+- **Support tích hợp `main.py`:** Hỗ trợ thiết kế logic `tool_node()` cho Feature 3 trong `main.py` — thêm SYSTEM_NOTE khi thiếu departure/arrival hoặc thiếu date, buộc chatbot hỏi lại thay vì trả kết quả sai.
+
+---
+
+## 5. Một điều học được trong hackathon mà trước đó chưa biết
+
+**Structured Output của LLM (Pydantic + `with_structured_output`) thay đổi hoàn toàn cách làm việc với AI.**
+
+Trước hackathon, tôi nghĩ trích xuất thông tin từ câu hỏi tự nhiên phải dùng regex hoặc NLP truyền thống (tokenize, NER). Nhưng khi sử dụng `llm.with_structured_output(ExtractionResult)` trong `main.py`, LLM tự động trả về object Pydantic đã validate — không cần parse JSON thủ công, không lo format sai. Điều này giúp toàn bộ pipeline **intent → entities → tool call** trở nên cực kỳ gọn gàng và đáng tin cậy. Đây là kỹ thuật tôi chắc chắn sẽ áp dụng lại trong các dự án AI sau này.
+
+---
+
+## 6. Nếu làm lại, tôi sẽ thay đổi gì?
+
+1. **Tách prompt riêng cho từng feature thay vì dùng chung `response_prompt.txt`:** Hiện tại chỉ Feature 1 có prompt riêng (`feature1_prompt.txt`). Feature 2, 3, 4 dùng chung `response_prompt.txt` → AI phản hồi đôi khi không đủ chuyên biệt. Nếu làm lại, tôi sẽ tạo thêm `feature2_prompt.txt`, `feature3_prompt.txt`, `feature4_prompt.txt` với hướng dẫn output format riêng cho từng loại dữ liệu.
+
+2. **Viết Unit Test cho `search_fares()` bằng `pytest` thay vì chỉ test end-to-end:** File `test_ly.py` hiện tại test luồng AI end-to-end (gọi LLM thật → tốn API + chậm). Nếu làm lại, tôi sẽ viết thêm unit test thuần Python cho hàm `search_fares()` — mock data đầu vào, assert kết quả đầu ra — để chạy nhanh và không phụ thuộc API key.
+
+3. **Thêm `time_of_day` và `cheapest_only` vào logic Slot-Filling trong `main.py`:** Hiện tại `tool_node()` chỉ truyền `departure`, `arrival`, `date` cho `search_fares()` mà bỏ sót `time_of_day`, `cabin_class`, `cheapest_only`. Các tham số này tuy đã được extract ở `intent_classifier` nhưng không được forward xuống tool — khiến các bộ lọc nâng cao không hoạt động qua chatbot (chỉ hoạt động khi gọi trực tiếp hàm Python).
+
+---
+
+## 7. AI đã giúp gì? AI sai/mislead ở đâu?
+
+### AI giúp gì ✅
+
+- **Sinh boilerplate code nhanh:** Khi tôi mô tả logic cross-reference 2 bảng, AI (Cursor/Copilot) sinh ra skeleton cho vòng lặp lọc flights + fares khá chính xác, tiết kiệm ~30 phút code thủ công.
+- **Viết prompt draft:** AI giúp tạo bản nháp `extraction_prompt.txt` với cấu trúc ROLE-TASK-CONTEXT. Tôi chỉ cần tinh chỉnh rules và thêm few-shot examples cụ thể cho domain hàng không.
+- **Gợi ý edge cases:** Khi tôi hỏi "còn case nào cần xử lý?", AI gợi ý thêm việc normalize ngày tháng và mapping tiếng Việt → tiếng Anh cho `cabin_class` — điều tôi chưa nghĩ tới.
+
+### AI sai/mislead ở đâu ❌
+
+- **AI từng xóa Guard Clause:** Trong một lần refactor, AI gợi ý "đơn giản hóa" hàm `search_fares()` và xóa mất dòng `if not departure or not arrival: return []`. Hậu quả: chatbot trả về toàn bộ giá vé trong database khi khách chưa nói điểm đi/đến. Tôi phải debug mất 20 phút mới phát hiện và thêm lại (có kèm comment `# KHÔNG ĐƯỢC XÓA ĐOẠN NÀY LẦN NỮA` ở dòng 10 của `fare_tools.py`).
+- **AI hallucinate format ngày:** Khi tôi hỏi cách normalize "10/4", AI ban đầu gợi ý dùng `datetime.strptime()` với format phức tạp — nhưng thực tế data trong JSON chỉ cần so khớp substring đơn giản. Cách của AI tuy "đúng về mặt kỹ thuật" nhưng over-engineering và gây thêm bug khi timezone không khớp.
+- **AI không hiểu kiến trúc cross-table:** Khi tôi hỏi "làm sao tìm giá vé theo điểm đi/đến?", AI gợi ý query trực tiếp bảng `fares` theo field `departure` — nhưng field đó **không tồn tại** trong bảng `fares`. Tôi phải tự đọc file JSON, hiểu cấu trúc dữ liệu, rồi tự thiết kế logic 2 bước (flights → fares). Bài học: **AI không đọc data thay mình được — phải tự hiểu dữ liệu trước khi nhờ AI code.**
