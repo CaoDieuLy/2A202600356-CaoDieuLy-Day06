@@ -1,10 +1,11 @@
 import os
 import json
 from dotenv import load_dotenv
-from typing import TypedDict, Annotated, List
+from typing import TypedDict, Annotated, List, Optional
+from pydantic import BaseModel, Field
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, BaseMessage, AIMessage
+from langchain_core.messages import HumanMessage, BaseMessage, AIMessage, SystemMessage
 from state import AgentState
 from tools.flight_tools import get_flight_info
 from tools.ticket_tools import get_ticket_details
@@ -13,8 +14,27 @@ from tools.baggage_tools import get_baggage_policy
 
 load_dotenv()
 
-# Khởi tạo LLM
-llm = ChatOpenAI(model="gpt-4o-mini")
+# Khởi tạo LLM cho việc trích xuất
+llm = ChatOpenAI(
+    model="gpt-4o-mini",
+    temperature=0,
+    api_key=os.environ.get("OPENAI_API_KEY", "not_provided")
+)
+
+# Pydantic struct cho Extraction Node
+class Entities(BaseModel):
+    flight_code: Optional[str] = Field(default=None, description="Mã chuyến bay, ví dụ VN123")
+    ticket_number: Optional[str] = Field(default=None)
+    passenger_name: Optional[str] = Field(default=None)
+    departure: Optional[str] = Field(default=None)
+    arrival: Optional[str] = Field(default=None)
+    date: Optional[str] = Field(default=None, description="Ngày khởi hành theo định dạng YYYY-MM-DD")
+    cabin_class: Optional[str] = Field(default=None)
+    baggage_type: Optional[str] = Field(default=None)
+
+class ExtractionResult(BaseModel):
+    intent: str = Field(description="general, flight_info, ticket_info, fare_search, hoặc baggage_info")
+    entities: Entities
 
 def read_prompt(file_name):
     """Đọc nội dung file prompt từ thư mục prompts/."""
@@ -25,10 +45,9 @@ def read_prompt(file_name):
     return ""
 
 def manage_memory_and_cache(state: AgentState):
-    """Giữ 5 lượt chat gần nhất và kiểm tra Cache."""
+    """Giữ lượt chat gần nhất và kiểm tra Cache."""
     messages = state["messages"]
     
-    # 1. Cắt tỉa memory (giữ 5 lượt = 10 messages)
     if len(messages) > 10:
         messages = messages[-10:]
     
@@ -48,10 +67,19 @@ def manage_memory_and_cache(state: AgentState):
     return {"messages": messages, "is_cached": False}
 
 def intent_classifier(state: AgentState):
-    """Node phân loại ý định và trích xuất thực thể bằng LLM (LLM-based Extraction)."""
+    """Node phân loại ý định người dùng và trích xuất thực thể."""
     if state.get("is_cached"):
         return state
 
+    sys_prompt = read_prompt("extraction_prompt.txt")
+    if not sys_prompt:
+        sys_prompt = "Bạn là hệ thống Trích xuất."
+
+    # Lấy thông tin ngày hiện tại để làm base time
+    from datetime import datetime
+    sys_prompt += f"\nLưu ý Context: Hôm nay là {datetime.now().strftime('%Y-%m-%d')}."
+    
+    structured_llm = llm.with_structured_output(ExtractionResult)
     # Đọc prompt trích xuất từ file txt
     system_prompt = read_prompt("extraction_prompt.txt")
     user_query = state["messages"][-1].content
@@ -64,20 +92,17 @@ def intent_classifier(state: AgentState):
     response = llm.invoke(messages, response_format={"type": "json_object"})
     
     try:
-        content = response.content.strip()
-        if "```json" in content:
-            content = content.split("```json")[1].split("```")[0].strip()
-        elif "```" in content:
-            content = content.split("```")[1].split("```")[0].strip()
-            
-        extracted_data = json.loads(content)
-        return {
-            "current_intent": extracted_data.get("intent", "general"),
-            "extracted_data": extracted_data
-        }
+        # Pass toàn bộ lịch sử trò chuyện (messages) để AI tự nhớ Context
+        messages_to_pass = [SystemMessage(content=sys_prompt)] + state["messages"]
+        result = structured_llm.invoke(messages_to_pass)
+        
+        intent = result.intent
+        extracted_data = result.entities.model_dump()
     except Exception as e:
-        print(f"Lỗi trích xuất thông tin: {e}")
-        return {"current_intent": "general", "extracted_data": {"intent": "general", "entities": {}}}
+        intent = "general"
+        extracted_data = {}
+
+    return {"current_intent": intent, "extracted_data": extracted_data}
 
 def tool_node(state: AgentState):
     """Node gọi các hàm Python để truy vấn dữ liệu thực tế từ Entities trích xuất được."""
@@ -85,13 +110,29 @@ def tool_node(state: AgentState):
         return state
 
     intent = state.get("current_intent")
-    entities = state.get("extracted_data", {}).get("entities", {})
+    entities = state.get("extracted_data", {})
     query_results = "Không tìm thấy thông tin phù hợp."
     
     if intent == "flight_info":
-        query_results = get_flight_info(
-            flight_code=entities.get("flight_code")
-        )
+        f_code = entities.get("flight_code")
+        f_date = entities.get("date")
+        
+        if not f_code:
+            query_results = "SYSTEM_NOTE: Vui lòng yêu cầu khách hàng cung cấp mã chuyến bay."
+        else:
+            # Tra cứu thử xem mã chuyến bay có tồn tại không kể cả khi chưa có ngày
+            all_flights_for_code = get_flight_info(flight_code=f_code, date=None)
+            
+            if not all_flights_for_code:
+                # Nếu không ra data nào, báo ngay lỗi mã sai mà không cần hỏi ngày!
+                query_results = f"SYSTEM_NOTE: Mã chuyến bay {f_code} không có trong hệ thống hiện tại, khuyên khách hàng không cần cung cấp ngày mà hãy kiểm tra lại mã."
+            elif not f_date:
+                # Mã đúng chuẩn, nhưng khách thiếu ngày đi
+                query_results = f"SYSTEM_NOTE: Mã chuyến {f_code} hợp lệ. Vui lòng hỏi khách hàng họ muốn khởi hành vào ngày nào?"
+            else:
+                data = get_flight_info(flight_code=f_code, date=f_date)
+                query_results = str(data) if data else f"SYSTEM_NOTE: Không tìm thấy chuyến bay {f_code} theo ngày cung cấp. Khuyên khách hàng kiểm tra lại."
+            
     elif intent == "ticket_info":
         query_results = get_ticket_details(
             ticket_number=entities.get("ticket_number"),
@@ -133,16 +174,28 @@ def responder(state: AgentState):
         return {"messages": [AIMessage(content=state["query_results"])]}
 
     results = state.get("query_results")
-    intent = state.get("current_intent")
-    entities = state.get("extracted_data", {}).get("entities", {})
-    system_prompt = read_prompt("response_prompt.txt")
     
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"Ý định người dùng: {intent}\nThông tin đã trích xuất: {entities}\nDữ liệu từ hệ thống: {results}"}
-    ]
+    # Định tuyến System Prompt dựa trên tính năng để tối ưu chất lượng Text
+    if state.get("current_intent") == "flight_info":
+        sys_prompt = read_prompt("feature1_prompt.txt")
+    else:
+        sys_prompt = read_prompt("response_prompt.txt")
+        
+    if not sys_prompt:
+        sys_prompt = "Bạn là trợ lý giải đáp của Vietnam Airlines."
+
+    prompt_content = f"Dựa trên dữ liệu sau (hoặc lưu ý điều hướng từ hệ thống): {results}\nHãy đưa ra câu trả lời trực tiếp cho khách hàng một cách tự nhiên dựa trên câu hỏi sau: {state['messages'][-1].content}."
     
-    response = llm.invoke(messages)
+    chat_llm = ChatOpenAI(
+        model="gpt-4o-mini",
+        temperature=0.3,
+        api_key=os.environ.get("OPENAI_API_KEY", "not_provided")
+    )
+    
+    response = chat_llm.invoke([
+        SystemMessage(content=sys_prompt), 
+        HumanMessage(content=prompt_content)
+    ])
     return {"messages": [response]}
 
 # Xây dựng Graph
@@ -165,18 +218,15 @@ workflow.add_edge("classifier", "tools")
 workflow.add_edge("tools", "responder")
 workflow.add_edge("responder", END)
 
-app = workflow.compile()
+from langgraph.checkpoint.memory import MemorySaver
+
+memory = MemorySaver()
+app = workflow.compile(checkpointer=memory)
 
 if __name__ == "__main__":
     print("--- Chatbot Hàng Không (NEO 2.0) đã sẵn sàng! (Gõ 'exit' để thoát) ---")
     
-    state = {
-        "messages": [],
-        "extracted_data": {},
-        "query_results": "",
-        "current_intent": "general",
-        "is_cached": False
-    }
+    config = {"configurable": {"thread_id": "user_session_1"}}
     
     while True:
         user_input = input("\nKhách hàng: ")
@@ -184,8 +234,9 @@ if __name__ == "__main__":
             print("Cảm ơn bạn đã sử dụng dịch vụ. Tạm biệt!")
             break
             
-        state["messages"].append(HumanMessage(content=user_input))
-        state = app.invoke(state)
+        # Chạy Graph với dữ liệu mới và truyền config state vào
+        # Chú ý: LangGraph dùng reducer nên {"messages": [HumanMessage(content=user_input)]} sẽ tự append liên tục
+        state = app.invoke({"messages": [HumanMessage(content=user_input)]}, config)
         
         final_response = state["messages"][-1].content
         print(f"NEO 2.0: {final_response}")

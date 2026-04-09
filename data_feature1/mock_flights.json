@@ -1,0 +1,204 @@
+{
+  "flights": [
+    {
+      "flight_code": "VN123",
+      "departure": "HAN (Hà Nội)",
+      "arrival": "SGN (TP.HCM)",
+      "scheduled_departure_time": "2026-04-10 08:00:00",
+      "scheduled_arrival_time": "2026-04-10 10:15:00",
+      "status": "On Time",
+      "gate": "V1",
+      "terminal": "T1"
+    },
+    {
+      "flight_code": "VJ245",
+      "departure": "SGN (TP.HCM)",
+      "arrival": "DAD (Đà Nẵng)",
+      "scheduled_departure_time": "2026-04-10 14:30:00",
+      "scheduled_arrival_time": "2026-04-10 16:00:00",
+      "status": "Delayed (Weather)",
+      "gate": "A4",
+      "terminal": "T1"
+    },
+    {
+      "flight_code": "QH876",
+      "departure": "HAN (Hà Nội)",
+      "arrival": "CXR (Nha Trang)",
+      "scheduled_departure_time": "2026-04-10 06:00:00",
+      "scheduled_arrival_time": "2026-04-10 07:45:00",
+      "status": "Cancelled",
+      "gate": null,
+      "terminal": "T2"
+    },
+    {
+      "flight_code": "VN302",
+      "departure": "SGN (TP.HCM)",
+      "arrival": "PQC (Phú Quốc)",
+      "scheduled_departure_time": "2026-04-10 09:20:00",
+      "scheduled_arrival_time": "2026-04-10 10:10:00",
+      "status": "Boarding",
+      "gate": "B12",
+      "terminal": "T1"
+    },
+    {
+      "flight_code": "VU128",
+      "departure": "DAD (Đà Nẵng)",
+      "arrival": "HAN (Hà Nội)",
+      "scheduled_departure_time": "2026-04-10 11:45:00",
+      "scheduled_arrival_time": "2026-04-10 13:15:00",
+      "status": "Departed",
+      "gate": "C2",
+      "terminal": "T2"
+    },
+    {
+      "flight_code": "VN551",
+      "departure": "SGN (TP.HCM)",
+      "arrival": "VII (Vinh)",
+      "scheduled_departure_time": "2026-04-10 18:00:00",
+      "scheduled_arrival_time": "2026-04-10 20:00:00",
+      "status": "Arrived",
+      "gate": "D8",
+      "terminal": "T1"
+    },
+    {
+      "flight_code": "VJ607",
+      "departure": "HAN (Hà Nội)",
+      "arrival": "HPH (Hải Phòng)",
+      "scheduled_departure_time": "2026-04-11 07:30:00",
+      "scheduled_arrival_time": "2026-04-11 08:10:00",
+      "status": "Diverted to HAN",
+      "gate": "V3",
+      "terminal": "T1"
+    },
+    {
+      "flight_code": "QH162",
+      "departure": "SGN (TP.HCM)",
+      "arrival": "BKK (Bangkok)",
+      "scheduled_departure_time": "2026-04-11 12:15:00",
+      "scheduled_arrival_time": "2026-04-11 13:55:00",
+      "status": "Delayed (Technical)",
+      "gate": "G5",
+      "terminal": "I1"
+    },
+    {
+      "flight_code": "VN731",
+      "departure": "HAN (Hà Nội)",
+      "arrival": "SIN (Singapore)",
+      "scheduled_departure_time": "2026-04-11 09:00:00",
+      "scheduled_arrival_time": "2026-04-11 12:30:00",
+      "status": "On Time",
+      "gate": "E7",
+      "terminal": "T2"
+    },
+    {
+      "flight_code": "VU208",
+      "departure": "CXR (Nha Trang)",
+      "arrival": "SGN (TP.HCM)",
+      "scheduled_departure_time": "2026-04-11 16:20:00",
+      "scheduled_arrival_time": "2026-04-11 17:35:00",
+      "status": "Gate Changed",
+      "gate": "A9 (from A3)",
+      "terminal": "T1"
+    },
+    {
+      "flight_code": "VJ421",
+      "departure": "DAD (Đà Nẵng)",
+      "arrival": "VCA (Cần Thơ)",
+      "scheduled_departure_time": "2026-04-11 20:10:00",
+      "scheduled_arrival_time": "2026-04-11 21:40:00",
+      "status": "On Time",
+      "gate": "C4",
+      "terminal": "T2"
+    },
+    {
+      "flight_code": "VN186",
+      "departure": "SGN (TP.HCM)",
+      "arrival": "UIH (Quy Nhơn)",
+      "scheduled_departure_time": "2026-04-12 05:45:00",
+      "scheduled_arrival_time": "2026-04-12 06:55:00",
+      "status": "Departed",
+      "gate": "F1",
+      "terminal": "T1"
+    },
+    {
+      "flight_code": "QH516",
+      "departure": "HAN (Hà Nội)",
+      "arrival": "VCL (Chu Lai)",
+      "scheduled_departure_time": "2026-04-12 13:30:00",
+      "scheduled_arrival_time": "2026-04-12 15:00:00",
+      "status": "Delayed (Crew)",
+      "gate": "V6",
+      "terminal": "T2"
+    },
+    {
+      "flight_code": "VJ922",
+      "departure": "PQC (Phú Quốc)",
+      "arrival": "HAN (Hà Nội)",
+      "scheduled_departure_time": "2026-04-12 17:45:00",
+      "scheduled_arrival_time": "2026-04-12 20:00:00",
+      "status": "Cancelled",
+      "gate": null,
+      "terminal": "T1"
+    },
+    {
+      "flight_code": "VN230",
+      "departure": "SGN (TP.HCM)",
+      "arrival": "HUI (Huế)",
+      "scheduled_departure_time": "2026-04-12 10:00:00",
+      "scheduled_arrival_time": "2026-04-12 11:20:00",
+      "status": "Boarding",
+      "gate": "B4",
+      "terminal": "T1"
+    },
+    {
+      "flight_code": "VU089",
+      "departure": "HPH (Hải Phòng)",
+      "arrival": "CXR (Nha Trang)",
+      "scheduled_departure_time": "2026-04-13 08:15:00",
+      "scheduled_arrival_time": "2026-04-13 09:55:00",
+      "status": "On Time",
+      "gate": "P2",
+      "terminal": "T1"
+    },
+    {
+      "flight_code": "VJ554",
+      "departure": "TBB (Tuy Hòa)",
+      "arrival": "SGN (TP.HCM)",
+      "scheduled_departure_time": "2026-04-13 19:00:00",
+      "scheduled_arrival_time": "2026-04-13 20:20:00",
+      "status": "Delayed (Air Traffic)",
+      "gate": "L1",
+      "terminal": "T2"
+    },
+    {
+      "flight_code": "VN309",
+      "departure": "DAD (Đà Nẵng)",
+      "arrival": "SIN (Singapore)",
+      "scheduled_departure_time": "2026-04-13 15:30:00",
+      "scheduled_arrival_time": "2026-04-13 19:00:00",
+      "status": "Arrived",
+      "gate": "C7",
+      "terminal": "I1"
+    },
+    {
+      "flight_code": "QH903",
+      "departure": "HAN (Hà Nội)",
+      "arrival": "BKK (Bangkok)",
+      "scheduled_departure_time": "2026-04-14 01:20:00",
+      "scheduled_arrival_time": "2026-04-14 03:50:00",
+      "status": "On Time (Red-eye)",
+      "gate": "E2",
+      "terminal": "T2"
+    },
+    {
+      "flight_code": "VJ672",
+      "departure": "VCA (Cần Thơ)",
+      "arrival": "DAD (Đà Nẵng)",
+      "scheduled_departure_time": "2026-04-14 11:00:00",
+      "scheduled_arrival_time": "2026-04-14 12:30:00",
+      "status": "Terminal Changed",
+      "gate": "A1",
+      "terminal": "T1 (from T2)"
+    }
+  ]
+}

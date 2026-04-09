@@ -8,6 +8,17 @@ def get_flight_info(flight_code: str, date: str = None):
     - Trả về thông tin chi tiết: Giờ đi, giờ đến, trạng thái.
     """
     flights = get_flights()
-    # TODO: Cao thực hiện logic lọc dữ liệu ở đây
-    results = [f for f in flights if f["flight_code"] == flight_code]
+    results = []
+    
+    # Chuẩn hóa flight_code
+    f_code = flight_code.upper().strip() if flight_code else ""
+    
+    for f in flights:
+        if f.get("flight_code", "").upper() == f_code:
+            if date:
+                # So khớp ngày vì scheduled_departure có format 2026-04-10T08:00:00
+                if f.get("scheduled_departure", "").startswith(date):
+                    results.append(f)
+            else:
+                results.append(f)
     return results
