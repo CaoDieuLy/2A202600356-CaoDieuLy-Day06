@@ -116,7 +116,8 @@ def tool_node(state: AgentState):
                 arrival=arr,
                 date=date,
                 time_of_day=time_of_day,
-                cabin_class=entities.get("cabin_class")
+                cabin_class=entities.get("cabin_class"),
+                cheapest_only=entities.get("cheapest_only", False)
             )
     elif intent == "baggage_info":
         query_results = get_baggage_policy(

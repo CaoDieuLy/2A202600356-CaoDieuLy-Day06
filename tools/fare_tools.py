@@ -1,12 +1,16 @@
 from utils import get_fares, get_flights
 
-def search_fares(departure: str, arrival: str, date: str = None, time_of_day: str = None, cabin_class: str = None):
+def search_fares(departure: str, arrival: str, date: str = None, time_of_day: str = None, cabin_class: str = None, cheapest_only: bool = False):
     """
     NHIỆM VỤ CỦA LY (HOÀN THÀNH):
     - Tìm kiếm nhanh giá vé và sắp xếp từ rẻ nhất đến đắt nhất
     - Lọc theo điểm khởi hành, điểm đến, ngày bay và hạng ghế (nếu có).
     - Cắt lọc những chuyến bay còn chỗ trống (is_available = True).
     """
+    # KHÔNG ĐƯỢC XÓA ĐOẠN NÀY LẦN NỮA: Lớp bảo vệ chặn đứng AI lấy rác từ toàn bộ cơ sở dữ liệu nếu bị thiếu thông tin cốt lõi
+    if not departure or not arrival:
+        return []
+
     flights = get_flights()
     # Tìm mã các chuyến bay thỏa mãn điểm đi và điểm đến
     matching_flight_codes = set()
@@ -85,7 +89,9 @@ def search_fares(departure: str, arrival: str, date: str = None, time_of_day: st
         results.append(fare)
         
     # Sắp xếp các lựa chọn theo mức giá từ rẻ nhất đến đắt nhất
-    results = sorted(results, key=lambda x: x.get("price", 0))
+    results = sorted(results, key=lambda x: int(x.get("price", 0)))
     
-    # Chỉ trả về top 5 để LLM không bị ngập lụt context (token limit)
-    return results[:5]
+    if cheapest_only and len(results) > 0:
+        return [results[0]]
+    else:
+        return results[:5]
