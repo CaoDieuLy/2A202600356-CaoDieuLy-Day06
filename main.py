@@ -102,8 +102,9 @@ def tool_node(state: AgentState):
     
     if intent == "flight_info":
         flight_code = entities.get("flight_code")
+        date = entities.get("date")
         if flight_code:
-            query_results = get_flight_info(flight_code=flight_code)
+            query_results = get_flight_info(flight_code=flight_code, date=date)
     elif intent == "ticket_info":
         passenger_name = entities.get("passenger_name")
         ticket_number = entities.get("ticket_number")
@@ -114,8 +115,20 @@ def tool_node(state: AgentState):
     elif intent == "fare_search":
         departure = entities.get("departure")
         arrival = entities.get("arrival")
+        date = entities.get("date")
+        time_of_day = entities.get("time_of_day")
+        cabin_class = entities.get("cabin_class")
+        cheapest_only = entities.get("cheapest_only", False)
+        
         if departure and arrival:
-            query_results = search_fares(departure=departure, arrival=arrival)
+            query_results = search_fares(
+                departure=departure, 
+                arrival=arrival,
+                date=date,
+                time_of_day=time_of_day,
+                cabin_class=cabin_class,
+                cheapest_only=cheapest_only
+            )
     elif intent == "baggage_info":
         cabin_class = entities.get("cabin_class")
         baggage_type = entities.get("baggage_type") or "checked"
