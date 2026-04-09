@@ -1,12 +1,97 @@
-from utils import get_fares
+from utils import get_fares, get_flights
 
-def search_fares(departure: str, arrival: str, cabin_class: str = None):
+def search_fares(departure: str, arrival: str, date: str = None, time_of_day: str = None, cabin_class: str = None, cheapest_only: bool = False):
     """
-    NHIỆM VỤ CỦA LY:
-    - Lọc danh sách giá vé theo điểm xuất phát (departure) và điểm đến (arrival).
-    - Nếu có hạng ghế (cabin_class), lọc đúng hạng ghế đó.
-    - Trả về các option kèm giá tiền và trạng thái còn chỗ (is_available).
+    NHIỆM VỤ CỦA LY (HOÀN THÀNH):
+    - Tìm kiếm nhanh giá vé và sắp xếp từ rẻ nhất đến đắt nhất
+    - Lọc theo điểm khởi hành, điểm đến, ngày bay và hạng ghế (nếu có).
+    - Cắt lọc những chuyến bay còn chỗ trống (is_available = True).
     """
+    # KHÔNG ĐƯỢC XÓA ĐOẠN NÀY LẦN NỮA: Lớp bảo vệ chặn đứng AI lấy rác từ toàn bộ cơ sở dữ liệu nếu bị thiếu thông tin cốt lõi
+    if not departure or not arrival:
+        return []
+
+    flights = get_flights()
+    # Tìm mã các chuyến bay thỏa mãn điểm đi và điểm đến
+    matching_flight_codes = set()
+    for f in flights:
+        # Kiểm tra departure (support cả tên sân bay và mã, vd: "Đà Nẵng" hoặc "DAD")
+        if departure:
+            departure_lower = departure.lower()
+            flight_departure = f.get("departure", "").lower()
+            if departure_lower not in flight_departure:
+                continue
+        
+        # Kiểm tra arrival tương tự
+        if arrival:
+            arrival_lower = arrival.lower()
+            flight_arrival = f.get("arrival", "").lower()
+            if arrival_lower not in flight_arrival:
+                continue
+        
+        matching_flight_codes.add(f.get("flight_code"))
+        
     fares = get_fares()
-    # TODO: Ly thực hiện logic tìm kiếm và sắp xếp giá ở đây
-    return fares # Placeholder
+    results = []
+    
+    for fare in fares:
+        # Bỏ qua những chuyến đã bán hết vé cho hạng này
+        if not fare.get("is_available"):
+            continue
+            
+        # Bỏ qua nếu mã chuyến bay không thỏa mãn điểm đi/đến
+        if fare.get("flight_code") not in matching_flight_codes:
+            continue
+            
+        # Kiểm tra ngày — support format "10/4" → "2026-04-10" hoặc "2026-04-10T..."
+        if date:
+            scheduled_dep = fare.get("scheduled_departure", "")
+            # Normalize date: "10/4" → "04-10" (so sánh tháng-ngày)
+            if "/" in date:
+                date_parts = date.split("/")
+                if len(date_parts) == 2:
+                    normalized_date = f"{date_parts[1]:0>2}-{date_parts[0]:0>2}"
+                    if normalized_date not in scheduled_dep.replace("-", "-")[-10:]:
+                        continue
+            else:
+                # Format YYYY-MM-DD hoặc chỉ MM-DD
+                if date not in scheduled_dep:
+                    continue
+            
+        # So khớp hạng vé nếu user có yêu cầu cụ thể
+        # Support cả "Business", "Thương gia", "Economy" (case-insensitive)
+        if cabin_class:
+            cabin_class_lower = cabin_class.lower()
+            fare_cabin = fare.get("cabin_class", "").lower()
+            # Map Việt sang Anh
+            if "thương gia" in cabin_class_lower or "business" in cabin_class_lower:
+                if "business" not in fare_cabin:
+                    continue
+            elif cabin_class_lower not in fare_cabin:
+                continue
+
+        # Lọc buổi bay
+        if time_of_day:
+            scheduled_dep = fare.get("scheduled_departure", "")
+            if "T" in scheduled_dep:
+                try:
+                    hour = int(scheduled_dep.split("T")[1].split(":")[0])
+                    time_lower = time_of_day.lower()
+                    if "morning" in time_lower and not (0 <= hour < 12):
+                        continue
+                    elif "afternoon" in time_lower and not (12 <= hour < 18):
+                        continue
+                    elif "evening" in time_lower and not (18 <= hour <= 23):
+                        continue
+                except:
+                    pass
+                    
+        results.append(fare)
+        
+    # Sắp xếp các lựa chọn theo mức giá từ rẻ nhất đến đắt nhất
+    results = sorted(results, key=lambda x: int(x.get("price", 0)))
+    
+    if cheapest_only and len(results) > 0:
+        return [results[0]]
+    else:
+        return results[:5]
