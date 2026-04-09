@@ -1,0 +1,30 @@
+# Environment Variables (BẮT BUỘC ĐỂ ẨN API KEY)
+.env
+.env.*
+
+# Python Virtual Environments
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python Cache (Ẩn các file sinh ra khi Python chạy)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs & Databases
+*.log
+*.sqlite3
+*.db
+
+# Streamlit
+.streamlit/
+*.streamlit
+
+# IDEs / Edtiors (VS Code, MacOS...)
+.vscode/
+.idea/
+.DS_Store
