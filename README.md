@@ -98,5 +98,47 @@ Nhom21-403-Day06/
 └── data/                    # (Nếu có) Dữ liệu mẫu dạng JSON mô phỏng Database
 ```
 
+---
+
+## 🧪 Hướng dẫn Kiểm thử (Test Cases)
+
+Sau khi hệ thống đã chạy, bạn có thể kiểm thử các tính năng bằng cách gõ các câu mẫu sau vào khung chat. Xem chi tiết kịch bản tại [`test_case.md`](test_case.md).
+
+### 1. Tra cứu Chuyến bay
+
+| Câu hỏi mẫu | Kết quả mong đợi |
+|-------------|-----------------|
+| `Cho tôi thông tin chuyến bay VN123 ngày 10/4` | Bot trả về giờ đi, giờ đến, trạng thái chuyến bay |
+| `Tìm chuyến bay VN9999` | Bot báo ngay "Mã chuyến không tồn tại", **không** hỏi thêm ngày |
+
+### 2. Tìm giá vé (Slot-Filling)
+
+| Câu hỏi mẫu | Kết quả mong đợi |
+|-------------|-----------------|
+| `Tôi muốn mua vé từ Đà Nẵng đi Hà Nội` | Bot **hỏi lại ngày bay** thay vì tự báo giá |
+| `Ngày 10/4 nhé` *(sau câu trên)* | Bot kết hợp điểm đi/đến + ngày → hiển thị danh sách giá |
+| `Tìm chuyến rẻ nhất từ Hà Nội đi TP.HCM sáng ngày mai` | Chỉ trả **1 kết quả** rẻ nhất, lọc buổi sáng |
+
+### 3. Tra cứu Vé cá nhân
+
+| Câu hỏi mẫu | Kết quả mong đợi |
+|-------------|-----------------|
+| `Tra vé cho Nguyen Van A` | Bot yêu cầu cung cấp **mã vé** thay vì tên |
+| `Tra mã vé 0905262286` | Hiển thị đầy đủ: họ tên, chuyến bay, giờ, hạng, số ghế |
+
+### 4. Quy định Hành lý
+
+| Câu hỏi mẫu | Kết quả mong đợi |
+|-------------|-----------------|
+| `Hạng phổ thông được mang bao nhiêu kg hành lý?` | Số kg xách tay + ký gửi hạng Economy |
+| `Hành lý xách tay hạng thương gia là mấy cân?` | Chỉ thông tin carry-on hạng Business |
+
+### 5. Tự động hỏi đánh giá (Rating)
+
+Sau **60 giây** không tương tác, Bot sẽ tự động hiển thị widget **5 ngôi sao ⭐** để đánh giá chất lượng. Click vào sao để hoàn tất cuộc trò chuyện.
+
+---
+
 ## 📝 Bản quyền
 Dự án được xây dựng và phát triển phục vụ mục đích học thuật / hackathon AI. Thương hiệu và Mascot VNA thuộc bản quyền của Vietnam Airlines.
+
